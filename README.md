@@ -1,13 +1,33 @@
 # Leo Vibe Maps
 
-Leo Vibe Maps is a Chrome extension that overlays Barcelona neighbourhood areas and vibe tags on accommodation search maps. The repository preserves the recovered Manifest V3 extension and an interactive map of its five original example areas.
+Leo Vibe Maps is a Chrome extension that adds neighbourhood areas and vibe tags to accommodation search maps.
 
-## Install
+![Leo Vibe Maps example](https://atelierneyra.com/assets/product-motion-v3/leo-vibe-maps.jpg)
 
-Download the extension ZIP from the demo, unzip it, open `chrome://extensions`, enable Developer mode and select **Load unpacked**, then choose the extracted directory. On a supported Airbnb or Booking search map, open the toolbar popup and select **Show Barcelona Areas**. These overlays depend on the host site’s map implementation; browser and website changes can affect compatibility.
+[Open demo](https://preview.atelierneyra.com/apps/vibe-maps/) · [Project website](https://atelierneyra.com/vibe-maps/) · [Documentation](https://docs.atelierneyra.com/leo-vibe-maps/overview/) · [GitHub](https://github.com/latintzar/leo-vibe-maps) · [Download extension](https://github.com/latintzar/leo-vibe-maps/releases/download/v0.1.0-source-beta/leo-vibe-maps.zip)
 
-The custom-area option accepts your own Gemini API key for a single request. Your browser sends the trip description and key directly to Gemini; provider usage may incur charges. The key is not saved by the extension. Default Barcelona areas do not require a key.
+## What it does
 
-## Source and rights
+The extension draws the original Gothic Quarter, El Born, Gràcia, Barceloneta and Eixample areas on a supported map. Hover for tags and select an area to explore it. The separate interactive demo shows the same source areas on an OpenStreetMap-backed map.
 
-Recovered from `latintzar/puedo_casa`, master `d461e9556f09ad526030376ab58643298e3a1fc8`, via the public Home Matching source extraction. The original extension is under `extension/`. `demo/areas.js` is extracted from its original neighbourhood list; the demo draws those areas on an OpenStreetMap-backed Leaflet map as an interactive example. It is separate from the extension’s page integration. Original code is MIT licensed; dependencies, map tiles, and the Lucide icon retain their own licenses. See the icon’s adjacent license and third-party notices.
+## Install and run
+
+Download and unzip the extension. Open `chrome://extensions`, enable Developer mode, choose **Load unpacked**, and select the extracted folder. Open an Airbnb Barcelona search map, open the extension popup, and select **Show Barcelona Areas**. The unpacked extension was tested on an Airbnb Barcelona search and created all five circles. Host-site changes may affect compatibility.
+
+For the separate interactive example:
+
+```sh
+git clone https://github.com/latintzar/leo-vibe-maps.git
+cd leo-vibe-maps/demo
+python3 -m http.server 18873 --bind 127.0.0.1
+```
+
+Open http://127.0.0.1:18873.
+
+## Credentials and status
+
+The five Barcelona examples need no key. Custom generation accepts your Gemini API key for one request and sends your trip description directly to Gemini; provider charges may apply. The extension does not save the key. No provider call was made during recovery.
+
+## Source and agent instructions
+
+Recovered from `latintzar/puedo_casa`, master `d461e9556f09ad526030376ab58643298e3a1fc8`, via the public Home Matching extraction. The extension is in `extension/`; `demo/areas.js` retains its original area list. Keep the demo distinct from the live page integration and verify site compatibility after changes. Original code is MIT licensed; dependencies, map tiles and the Lucide icon retain their own licenses.
