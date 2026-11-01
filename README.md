@@ -33,3 +33,14 @@ The five Barcelona examples need no key. Custom generation accepts your Gemini A
 ## Source and agent instructions
 
 Recovered from `latintzar/puedo_casa`, master `d461e9556f09ad526030376ab58643298e3a1fc8`, via the public Home Matching extraction. The extension is in `extension/`; `demo/areas.js` retains its original area list. Keep the demo distinct from the live page integration and verify site compatibility after changes. Original code is MIT licensed; dependencies, map tiles and the Lucide icon retain their own licenses.
+
+## Development checks
+
+```sh
+cd extension
+npm ci --ignore-scripts
+npx --no-install playwright install chromium
+npm test
+```
+
+The offline browser check renders hostile generated text through both map-card implementations. Generated areas are bounded to ten, with finite coordinates, a bounded radius, plain text, three itinerary items and six-digit hex colours. Provider requests remain an explicit action using the recipient’s key.

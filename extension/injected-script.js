@@ -7,6 +7,36 @@
 
 (function() {
   'use strict';
+
+  // Model responses and page events are untrusted data at both renderer boundaries.
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, character => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[character]);
+  }
+
+  function normalizeAreas(value) {
+    if (!Array.isArray(value)) return [];
+    const palette = ['#E74C3C', '#3498DB', '#2ECC71', '#F39C12', '#9B59B6'];
+    const text = (value, limit) => typeof value === 'string' ? value.slice(0, limit) : '';
+    return value.slice(0, 10).flatMap((area, index) => {
+      if (!area || typeof area !== 'object' || Array.isArray(area)) return [];
+      const lat = Number(area.lat), lng = Number(area.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return [];
+      const radius = Number(area.radius);
+      return [{
+        name: text(area.name, 200) || `Area ${index + 1}`,
+        lat, lng,
+        radius: Number.isFinite(radius) ? Math.max(50, Math.min(radius, 5000)) : 400,
+        color: typeof area.color === 'string' && /^#[0-9a-f]{6}$/i.test(area.color) ? area.color : palette[index % palette.length],
+        why: text(area.why, 600),
+        itinerary: Array.isArray(area.itinerary) ? area.itinerary.slice(0, 3).filter(item => item && typeof item === 'object').map(item => ({purpose: text(item.purpose, 120), query: text(item.query, 240)})) : [],
+        places: Array.isArray(area.places) ? area.places.slice(0, 6).map(item => text(item, 200)) : [],
+        vibes: Array.isArray(area.vibes) ? area.vibes.slice(0, 6).map(item => text(item, 80)) : [],
+        grounded: area.grounded === true
+      }];
+    });
+  }
   
   // Get config from data attributes on the script tag
   const scriptTag = document.getElementById('leo-vibe-injected-script');
@@ -18,7 +48,7 @@
   let CUSTOM_AREAS = null;
   if (customAreasJson) {
     try {
-      CUSTOM_AREAS = JSON.parse(customAreasJson);
+      CUSTOM_AREAS = normalizeAreas(JSON.parse(customAreasJson));
       console.log('🤖 Custom AI-generated areas loaded:', CUSTOM_AREAS.length);
     } catch (e) {
       console.error('❌ Failed to parse custom areas:', e);
@@ -80,7 +110,7 @@
   ];
   
   // Use custom areas if provided, otherwise use defaults
-  const VIBE_AREAS = CUSTOM_AREAS || DEFAULT_VIBE_AREAS;
+  const VIBE_AREAS = CUSTOM_AREAS || normalizeAreas(DEFAULT_VIBE_AREAS);
   
   // Module-scoped navigation state (accessible to event listeners)
   let currentAreasArray = VIBE_AREAS;
@@ -404,6 +434,8 @@
     
     // Show info card
     function showInfoCard(area, index, persistent = false) {
+      area = normalizeAreas([area])[0];
+      if (!area) return;
       if (cardPersistent && !persistent) return;
       
       hideInfoCard(true);
@@ -420,7 +452,7 @@
             <div style="display: flex; flex-direction: column; gap: 8px;">
               ${area.itinerary.map(item => `
                 <div style="display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; background: rgba(255,255,255,0.06); border-radius: 10px;">
-                  <div style="font-size: 13px; font-weight: 500;">${item.purpose}</div>
+                  <div style="font-size: 13px; font-weight: 500;">${escapeHtml(item.purpose)}</div>
                   <div style="display: flex; gap: 6px;">
                     <a href="https://www.google.com/maps/search/${encodeURIComponent(item.query)}/@${area.lat},${area.lng},16z" 
                        target="_blank" style="display: flex; align-items: center; gap: 4px; padding: 5px 10px; background: rgba(66, 133, 244, 0.25); border-radius: 6px; text-decoration: none; color: #93c5fd; font-size: 11px;">
@@ -437,7 +469,7 @@
           </div>
         `;
       } else if (area.vibes) {
-        itineraryHtml = `<div style="margin-top: 8px;">${area.vibes.map(v => `<span style="display: inline-block; background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 12px; margin: 2px 4px 2px 0; font-size: 12px;">${v}</span>`).join('')}</div>`;
+        itineraryHtml = `<div style="margin-top: 8px;">${area.vibes.map(v => `<span style="display: inline-block; background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 12px; margin: 2px 4px 2px 0; font-size: 12px;">${escapeHtml(v)}</span>`).join('')}</div>`;
       }
       
       // Navigation footer
@@ -455,8 +487,8 @@
         <div style="display: flex; align-items: flex-start; gap: 12px;">
           <div style="width: 40px; height: 40px; border-radius: 50%; background: ${area.color}; opacity: 0.8; flex-shrink: 0;"></div>
           <div style="flex: 1;">
-            <div style="font-weight: 600; font-size: 16px; margin-bottom: 6px;">📍 ${area.name}</div>
-            <div style="font-size: 13px; opacity: 0.9;">${area.why || ''}</div>
+            <div style="font-weight: 600; font-size: 16px; margin-bottom: 6px;">📍 ${escapeHtml(area.name)}</div>
+            <div style="font-size: 13px; opacity: 0.9;">${escapeHtml(area.why || '')}</div>
           </div>
           <button id="leo-card-close" style="background: none; border: none; color: white; opacity: 0.6; cursor: pointer; font-size: 18px; padding: 0;">×</button>
         </div>
@@ -1780,6 +1812,9 @@
     // persistent = true means card stays until pan (for click)
     // persistent = false means card hides on mouseout (for hover)
     function showVibeInfoCard(name, area, activeMap, persistent = false) {
+      area = normalizeAreas([area])[0];
+      if (!area) return;
+      name = area.name;
       // If there's a persistent card showing, don't replace it with hover card
       if (cardPersistent && !persistent) {
         return;
@@ -1817,7 +1852,7 @@
       
       if (area.why) {
         // AI-generated description (short, 140 chars)
-        description = `<div style="font-size: 13px; opacity: 0.9; line-height: 1.4;">${area.why}</div>`;
+        description = `<div style="font-size: 13px; opacity: 0.9; line-height: 1.4;">${escapeHtml(area.why)}</div>`;
         
         // Show itinerary with Google Maps + TikTok links
         if (area.itinerary && area.itinerary.length > 0) {
@@ -1834,7 +1869,7 @@
                     background: rgba(255,255,255,0.06);
                     border-radius: 10px;
                   ">
-                    <div style="font-size: 13px; font-weight: 500;">${item.purpose}</div>
+                    <div style="font-size: 13px; font-weight: 500;">${escapeHtml(item.purpose)}</div>
                     <div style="display: flex; gap: 6px;">
                       <a href="${buildMapsSearchUrl(item.query, area.lat, area.lng)}" 
                          target="_blank" 
@@ -1896,7 +1931,7 @@
                   padding: 3px 10px;
                   border-radius: 12px;
                   margin: 2px 4px 2px 0;
-                ">${p}</span>`).join('')}
+                ">${escapeHtml(p)}</span>`).join('')}
               </div>
             </div>
           `;
@@ -1924,7 +1959,7 @@
             border-radius: 12px;
             margin: 2px 4px 2px 0;
             font-size: 12px;
-          ">${v}</span>`).join('')}
+          ">${escapeHtml(v)}</span>`).join('')}
         </div>`;
       }
       
@@ -1986,7 +2021,7 @@
             flex-shrink: 0;
           "></div>
           <div style="flex: 1;">
-            <div style="font-weight: 600; font-size: 16px; margin-bottom: 6px;">📍 ${name}${groundedBadge}</div>
+            <div style="font-weight: 600; font-size: 16px; margin-bottom: 6px;">📍 ${escapeHtml(name)}${groundedBadge}</div>
             ${description}
           </div>
           <button id="leo-card-close" style="
@@ -2210,8 +2245,8 @@
   
   // Listen for area updates (AI-generated areas)
   window.addEventListener('leo-vibe-update-areas', (e) => {
-    const newAreas = e.detail?.areas;
-    if (!newAreas || !Array.isArray(newAreas)) {
+    const newAreas = normalizeAreas(e.detail?.areas);
+    if (!newAreas.length) {
       console.error('❌ Invalid areas in update event');
       return;
     }
