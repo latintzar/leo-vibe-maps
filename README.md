@@ -6,7 +6,7 @@ Leo Vibe Maps is a Chrome extension that adds neighbourhood areas and vibe tags 
 
 ![Leo Vibe Maps](https://atelierneyra.com/assets/product-motion-v4/leo-vibe-maps.jpg)
 
-[Open demo](https://preview.atelierneyra.com/apps/vibe-maps/) · [Project website](https://atelierneyra.com/vibe-maps/) · [Documentation](https://docs.atelierneyra.com/leo-vibe-maps/overview/) · [GitHub](https://github.com/latintzar/leo-vibe-maps) · [Download extension](https://github.com/latintzar/leo-vibe-maps/releases/download/v0.1.0-source-beta/leo-vibe-maps.zip)
+[Open demo](https://preview.atelierneyra.com/apps/vibe-maps/) · [Project website](https://atelierneyra.com/vibe-maps/) · [Documentation](https://docs.atelierneyra.com/leo-vibe-maps/overview/) · [GitHub](https://github.com/latintzar/leo-vibe-maps) · [Download extension](https://github.com/latintzar/leo-vibe-maps/releases/download/v0.1.1-source-beta/leo-vibe-maps.zip)
 
 ## What it does
 
